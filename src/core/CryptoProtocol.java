@@ -12,6 +12,6 @@ public final class CryptoProtocol {
 
 	// Chat
 	public static final String MSG = "MSG";
-	public static final String SEP = "|"; // alan ayırıcı
+	public static final String SEP = "|";
 
 }

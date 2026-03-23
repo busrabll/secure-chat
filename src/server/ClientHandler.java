@@ -2,6 +2,7 @@ package server;
 
 import core.CryptoProtocol;
 import core.RSAUtil;
+import core.AESUtil;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -59,10 +60,30 @@ public class ClientHandler extends Thread {
 			// Decrypt the AES key with the RSA private key
 			String aesKeyBase64 = RSAUtil.decryptFromBase64(encryptedAesKeyB64, SERVER_KEYS.getPrivate());
 
+			sessionKey = AESUtil.base64ToKey(aesKeyBase64);
+			System.out.println("Handshake complete. AES session key stored.");
+
 			System.out.println("Handshake complete. AES key (base64) received: "
 					+ aesKeyBase64.substring(0, Math.min(20, aesKeyBase64.length())) + "...");
 
 			out.println("HANDSHAKE_OK");
+
+			String encryptedMsgLine = in.readLine();
+			if (encryptedMsgLine == null) {
+				System.out.println("Client disconnected before sending encrypted message.");
+				return;
+			}
+
+			String[] msgParts = encryptedMsgLine.split("\\|", 2);
+			if (msgParts.length != 2 || !CryptoProtocol.MSG.equals(msgParts[0])) {
+				System.out.println("Invalid encrypted message format: " + encryptedMsgLine);
+				return;
+			}
+
+			String encryptedPayload = msgParts[1];
+			String decryptedMessage = AESUtil.decrypt(encryptedPayload, sessionKey);
+
+			System.out.println("Decrypted client message: " + decryptedMessage);
 
 		} catch (Exception e) {
 			e.printStackTrace();

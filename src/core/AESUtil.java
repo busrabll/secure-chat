@@ -20,25 +20,21 @@ public final class AESUtil {
 	private static final int GCM_TAG_LENGTH_BITS = 128;
 	private static final int IV_LENGTH_BYTES = 12;
 
-	
 	public static SecretKey generateKey() throws Exception {
 		KeyGenerator kg = KeyGenerator.getInstance(AES_ALGORITHM);
 		kg.init(256);
 		return kg.generateKey();
 	}
 
-	
 	public static String keyToBase64(SecretKey key) {
 		return Base64.getEncoder().encodeToString(key.getEncoded());
 	}
 
-	
 	public static SecretKey base64ToKey(String base64Key) {
 		byte[] keyBytes = Base64.getDecoder().decode(base64Key);
 		return new SecretKeySpec(keyBytes, AES_ALGORITHM);
 	}
-	
-	
+
 	public static String encrypt(String plainText, SecretKey key) throws Exception {
 		byte[] iv = new byte[IV_LENGTH_BYTES];
 		SecureRandom random = new SecureRandom();
@@ -54,8 +50,7 @@ public final class AESUtil {
 		String ctB64 = Base64.getEncoder().encodeToString(cipherBytes);
 		return ivB64 + ":" + ctB64;
 	}
-	
-	
+
 	public static String decrypt(String encrypted, SecretKey key) throws Exception {
 		String[] parts = encrypted.split(":", 2);
 		if (parts.length != 2) {

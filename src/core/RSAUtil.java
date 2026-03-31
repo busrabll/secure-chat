@@ -23,19 +23,16 @@ public final class RSAUtil {
 		kpg.initialize(2048);
 		return kpg.generateKeyPair();
 	}
-	
 
 	public static String publicKeyToBase64(PublicKey publicKey) {
 		return Base64.getEncoder().encodeToString(publicKey.getEncoded());
 	}
-	
 
 	public static PublicKey base64ToPublicKey(String base64) throws Exception {
 		byte[] keyBytes = Base64.getDecoder().decode(base64);
 		X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
 		return KeyFactory.getInstance("RSA").generatePublic(spec);
 	}
-	
 
 	public static String encryptToBase64(String plainText, PublicKey publicKey) throws Exception {
 		Cipher cipher = Cipher.getInstance(RSA_TRANSFORMATION);
@@ -44,7 +41,6 @@ public final class RSAUtil {
 		byte[] encrypted = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
 		return Base64.getEncoder().encodeToString(encrypted);
 	}
-	
 
 	public static String decryptFromBase64(String base64CipherText, PrivateKey privateKey) throws Exception {
 		Cipher cipher = Cipher.getInstance(RSA_TRANSFORMATION);

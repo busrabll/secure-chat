@@ -48,7 +48,6 @@ public class ClientHandler extends Thread {
 			}
 
 			// AES_KEY|<rsaEncryptedAesKey>
-
 			String[] parts = line.split("\\|", 2);
 			if (parts.length != 2 || !CryptoProtocol.AES_KEY.equals(parts[0])) {
 				System.out.println("Invalid handshake message: " + line);
@@ -84,6 +83,16 @@ public class ClientHandler extends Thread {
 			String decryptedMessage = AESUtil.decrypt(encryptedPayload, sessionKey);
 
 			System.out.println("Decrypted client message: " + decryptedMessage);
+
+			// Server reply
+			String serverReply = "Hello client, I received your message!";
+			String encryptedReply = AESUtil.encrypt(serverReply, sessionKey);
+
+			// MSG|<encryptedPayload>
+			out.println(CryptoProtocol.MSG + CryptoProtocol.SEP + encryptedReply);
+
+			System.out.println("Encrypted reply sent to client.");
+			System.out.println("Server reply (plain): " + serverReply);
 
 		} catch (Exception e) {
 			e.printStackTrace();

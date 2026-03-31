@@ -9,9 +9,9 @@ public class ChatServer {
 
 	public static void main(String[] args) {
 
-		System.out.println("ChatServer starting on port" + PORT + "...");
+		System.out.println("ChatServer starting on port" + " " + PORT + "...");
 
-		// try-with-resources: When the server shuts down, the ServerSocket automatically closes
+		// When the server shuts down, the ServerSocket automatically closes
 		try (ServerSocket serverSocket = new ServerSocket(PORT)) {
 
 			// The server constantly waits for new clients

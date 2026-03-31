@@ -22,11 +22,10 @@ public class ChatClient {
 
 		try (Socket socket = new Socket(HOST, PORT);
 				BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-				PrintWriter out = new PrintWriter(socket.getOutputStream(), true) // autoFlush
-		) {
+				PrintWriter out = new PrintWriter(socket.getOutputStream(), true)) {
 
 			// Server PUBLIC_KEY|<base64>
-			String line = in.readLine(); // Server PUBLIC_KEY|<base64> gönderecek
+			String line = in.readLine();
 			if (line == null) {
 				System.out.println("Server closed connection.");
 				return;
@@ -66,8 +65,27 @@ public class ChatClient {
 			out.println(CryptoProtocol.MSG + CryptoProtocol.SEP + encryptedMessage);
 
 			System.out.println("Plain message encrypted and sent.");
-			System.out.println("PLAIN     : " + plainMessage);
-			System.out.println("ENCRYPTED : " + encryptedMessage);
+			System.out.println("Plain     : " + plainMessage);
+			System.out.println("Encrypted : " + encryptedMessage);
+
+			// Server reply
+			String encryptedReplyLine = in.readLine();
+			if (encryptedReplyLine == null) {
+				System.out.println("Server closed connection before sending reply.");
+				return;
+			}
+
+			String[] replyParts = encryptedReplyLine.split("\\|", 2);
+			if (replyParts.length != 2 || !CryptoProtocol.MSG.equals(replyParts[0])) {
+				System.out.println("Invalid reply format: " + encryptedReplyLine);
+				return;
+			}
+
+			String encryptedReplyPayload = replyParts[1];
+			String decryptedReply = AESUtil.decrypt(encryptedReplyPayload, aesKey);
+
+			System.out.println("Server reply (encrypted): " + encryptedReplyPayload);
+			System.out.println("Server reply (plain)    : " + decryptedReply);
 
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -12,6 +12,8 @@ import java.security.PublicKey;
 
 import javax.crypto.SecretKey;
 
+import java.util.Scanner;
+
 public class ChatClient {
 
 	private static final String HOST = "127.0.0.1";
@@ -40,7 +42,7 @@ public class ChatClient {
 			String serverPubB64 = parts[1];
 			PublicKey serverPublicKey = RSAUtil.base64ToPublicKey(serverPubB64);
 
-			System.out.println("Server public key received (first40): "
+			System.out.println("Server public key received: "
 					+ serverPubB64.substring(0, Math.min(40, serverPubB64.length())) + "...");
 
 			SecretKey aesKey = AESUtil.generateKey();
@@ -51,41 +53,50 @@ public class ChatClient {
 			// AES_KEY|<rsaEncryptedBase64>
 			out.println(CryptoProtocol.AES_KEY + CryptoProtocol.SEP + encryptedAesKeyB64);
 
-			System.out.println("AES key generated + encrypted and sent.");
+			System.out.println("AES key generated, encrypted and sent.");
 
 			String ack = in.readLine();
 			System.out.println("Server says: " + ack);
 
-			System.out.println("Handshake finished. (Next: send/receive AES encrypted messages)");
+			System.out.println("Handshake finished.");
 
-			String plainMessage = "Hello server, this is my first AES message!";
-			String encryptedMessage = AESUtil.encrypt(plainMessage, aesKey);
+			//Chat Cycle
+			Scanner scanner = new Scanner(System.in);
 
-			// MSG|<encryptedPayload>
-			out.println(CryptoProtocol.MSG + CryptoProtocol.SEP + encryptedMessage);
+			while (true) {
+				System.out.print("Message: ");
+				String plainMessage = scanner.nextLine();
 
-			System.out.println("Plain message encrypted and sent.");
-			System.out.println("Plain     : " + plainMessage);
-			System.out.println("Encrypted : " + encryptedMessage);
+				if ("exit".equalsIgnoreCase(plainMessage)) {
+					System.out.println("Closing chat...");
+					break;
+				}
 
-			// Server reply
-			String encryptedReplyLine = in.readLine();
-			if (encryptedReplyLine == null) {
-				System.out.println("Server closed connection before sending reply.");
-				return;
+				String encryptedMessage = AESUtil.encrypt(plainMessage, aesKey);
+
+				// MSG|<encryptedPayload>
+				out.println(CryptoProtocol.MSG + CryptoProtocol.SEP + encryptedMessage);
+
+				System.out.println("Encrypted sent: " + encryptedMessage);
+
+				// Server reply
+				String encryptedReplyLine = in.readLine();
+				if (encryptedReplyLine == null) {
+					System.out.println("Server closed connection.");
+					break;
+				}
+
+				String[] replyParts = encryptedReplyLine.split("\\|", 2);
+				if (replyParts.length != 2 || !CryptoProtocol.MSG.equals(replyParts[0])) {
+					System.out.println("Invalid reply format: " + encryptedReplyLine);
+					break;
+				}
+
+				String encryptedReplyPayload = replyParts[1];
+				String decryptedReply = AESUtil.decrypt(encryptedReplyPayload, aesKey);
+
+				System.out.println("Server: " + decryptedReply);
 			}
-
-			String[] replyParts = encryptedReplyLine.split("\\|", 2);
-			if (replyParts.length != 2 || !CryptoProtocol.MSG.equals(replyParts[0])) {
-				System.out.println("Invalid reply format: " + encryptedReplyLine);
-				return;
-			}
-
-			String encryptedReplyPayload = replyParts[1];
-			String decryptedReply = AESUtil.decrypt(encryptedReplyPayload, aesKey);
-
-			System.out.println("Server reply (encrypted): " + encryptedReplyPayload);
-			System.out.println("Server reply (plain)    : " + decryptedReply);
 
 		} catch (Exception e) {
 			e.printStackTrace();
